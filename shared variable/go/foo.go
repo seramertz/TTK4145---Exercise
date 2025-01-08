@@ -5,23 +5,47 @@ package main
 import (
     . "fmt"
     "runtime"
-    "time"
+    //"time"
 )
+
+type Request struct {
+    op string 
+    done chan bool
+}
+
 
 var i = 0
 
-func incrementing() { 
-    //TODO: increment i 1000000 times
-    for j := 0; j < 1000000; j++ {
-        i++
+func server(requests chan Request) {
+    for {
+        select{
+        case req:= <-requests:
+            switch req.op {
+            case "inc":
+                i++
+            case "dec":
+                i--
+            case "read":
+                req.done <- true
+            }
+        }
     }
 }
 
-func decrementing() {
+func incrementing(requests chan Request, done chan bool) { 
+    //TODO: increment i 1000000 times
+    for j := 0; j < 1000000; j++ {
+        requests <- Request{op: "inc"}
+    }
+    requests <- Request{op: "read", done: done}
+}
+
+func decrementing(requests chan Request, done chan bool) {
     //TODO: decrement i 1000000 times
     for j := 0; j < 1000000; j++ {
-        i--
+        requests <- Request{op: "dec"}
     }
+    requests <- Request{op: "read", done: done}
 }
 
 func main() {
@@ -31,11 +55,15 @@ func main() {
 	
 
     // TODO: Spawn both functions as goroutines
-	go incrementing()
-    go decrementing()
+    requests := make(chan Request)
+    done := make(chan bool)
 
+    go incrementing(requests, done)
+    go decrementing(requests, done)
+    go server(requests)
+    <-done
+    <-done
     // We have no direct way to wait for the completion of a goroutine (without additional synchronization of some sort)
     // We will do it properly with channels soon. For now: Sleep.
-    time.Sleep(500*time.Millisecond)
     Println("The magic number is:", i)
 }
