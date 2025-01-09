@@ -12,7 +12,7 @@ The implementation in both foo.c and foo.go increments or decrements a hared var
 - go starts the functions as goroutines
 - the sleep command makes the main function to sleep so the goroutines get time to execute (not proper, sync.WaitGroup)
 
-**4. Sharing prperly**
+**4. Sharing properly**
 1. foo.c
 - used POSIX mutexes to prevent race contdition (only one thread can modify the variable)
 - each thread locks and unlocks the variable in question to ensure that it is not changes otherwise
@@ -20,3 +20,4 @@ The implementation in both foo.c and foo.go increments or decrements a hared var
 
 2. foo.go
 - a server goroutine handles all modifications on data by listnening to a channel for requests (3 options and done messege)
+
